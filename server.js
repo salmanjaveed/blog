@@ -12,10 +12,10 @@ var session = require('express-session');
 
 
 var config = {
-    user: "salmanjaveed",
-    host: "db.imad.hasura-app.io",
-    database: "salmanjaveed",
-    port: "5432",
+    user: process.env.DB_USER,
+    host: process.env.DB_HOST,
+    database: process.env.DB_NAME,
+    port: process.env.DB_PORT,
     password: process.env.DB_PASSWORD
 };
 
@@ -25,12 +25,10 @@ app.use(morgan('combined'));
 app.use(bodyParser.json());
 
 var pool = new Pool(config);
+var counter = 1;
 
 app.use(session({ secret: 'someRandomSecretValuet', cookie: { maxAge: 1000 * 60 * 60 * 24 * 30 }, resave: true, saveUninitialized: true }));
 
-app.get('/', function (req, res) {
-  res.sendFile(path.join(__dirname, 'ui', 'index.html'));
-});
 
 app.get('/auth/check-login', function (req, res) {
    if (req.session && req.session.auth && req.session.auth.userId) {
@@ -45,6 +43,10 @@ app.get('/auth/check-login', function (req, res) {
    } else {
        res.status(400).send('You are not logged in');
    }
+});
+
+app.get('/', function (req, res) {
+  res.sendFile(path.join(__dirname, 'ui', 'index.html'));
 });
 
 
@@ -167,48 +169,60 @@ app.post('/create-user', function (req, res) {
    // JSON
    var username = req.body.username;
    var password = req.body.password;
-   var salt = crypto.randomBytes(128).toString('hex');
-   var dbString = hash(password, salt);
-   pool.query('INSERT INTO "user" (username, password) VALUES ($1, $2)', [username, dbString], function (err, result) {
-      if (err) {
-          res.status(500).send(err.toString());
-      } else {
-          res.send('User successfully created: ' + username);
+     if ( username && password) { // that is username and password are not empty
+   
+           var salt = crypto.randomBytes(128).toString('hex');
+           var dbString = hash(password, salt);
+           pool.query('INSERT INTO "user" (username, password) VALUES ($1, $2)', [username, dbString], function (err, result) {
+              if (err) {
+                  res.status(500).send(err.toString());
+              } else {
+                  res.send('User successfully created: ' + username);
+              }
+           });
+     }
+    else {
+           res.status(403).send('username/password is invalid');
       }
-   });
 });
 
 app.post('/login', function (req, res) {
    var username = req.body.username;
    var password = req.body.password;
    
-   pool.query('SELECT * FROM "user" WHERE username = $1', [username], function (err, result) {
-      if (err) {
-         // alert(res.send(err.toString()));
-          res.status(500).send(err.toString());
-      } else {
-          if (result.rows.length === 0) {
-              res.status(403).send('username/password is invalid');
+   if ( username && password) { // that is username and password are not empty
+      
+       pool.query('SELECT * FROM "user" WHERE username = $1', [username], function (err, result) {
+          if (err) {
+             // alert(res.send(err.toString()));
+              res.status(500).send(err.toString());
           } else {
-              // Match the password
-              var dbString = result.rows[0].password;
-              var salt = dbString.split('$')[2];
-              var hashedPassword = hash(password, salt); // Creating a hash based on the password submitted and the original salt
-              if (hashedPassword === dbString) {
-                
-                // Set the session
-                req.session.auth = {userId: result.rows[0].id};
-                // set cookie with a session id
-                // internally, on the server side, it maps the session id to an object
-                // { auth: {userId }}
-                res.send('credentials correct!');
-                
+              if (result.rows.length === 0) {
+                  res.status(403).send('username/password is invalid');
               } else {
-                res.status(403).send('username/password is invalid');
+                  // Match the password
+                  var dbString = result.rows[0].password;
+                  var salt = dbString.split('$')[2];
+                  var hashedPassword = hash(password, salt); // Creating a hash based on the password submitted and the original salt
+                  if (hashedPassword === dbString) {
+                    
+                    // Set the session
+                    req.session.auth = {userId: result.rows[0].id};
+                    // set cookie with a session id
+                    // internally, on the server side, it maps the session id to an object
+                    // { auth: {userId }}
+                    res.send('credentials correct!');
+                    
+                  } else {
+                    res.status(403).send('username/password is invalid');
+                  }
               }
           }
-      }
-   });
+       });
+       }
+   else {
+        res.status(403).send('Invalid Username/Password Values!');
+   }
 });
 
 app.post('/submit-comment/:articleName', function (req, res) {
@@ -231,7 +245,7 @@ app.post('/submit-comment/:articleName', function (req, res) {
                             if (err) {
                                 res.status(500).send(err.toString());
                             } else {
-                                res.status(200).send('Comment inserted!')
+                                res.status(200).send('Comment inserted!');
                             }
                         });
                 }
@@ -245,13 +259,14 @@ app.post('/submit-comment/:articleName', function (req, res) {
  app.get('/get-stats', function (req, res) {
    // make a select request
    // return a response with the results - select all counts of articles, comments and users
-   pool.query('SELECT (select count(*)  from article) as articleCount, (select count(*)  from "user") as userCount, (select count(*) FROM comment) as commentCount', function (err, result) {
+   pool.query(`SELECT (select count(*)  from article) as articleCount, (select count(*)  from "user") as userCount, (select count(*) FROM comment) as commentCount`, function (err, result) {
        
       if (err) {
           res.status(500).send(err.toString());
       } else {
-          
-          res.send(JSON.stringify(result.rows));
+          counter = counter + 1;
+          result.rows[0].counter = counter.toString();
+         res.send(JSON.stringify(result.rows));
       }
    });
 });
@@ -359,7 +374,7 @@ app.get('/js/main.js', function (req, res) {
 
 app.get('/css/fonts.css', function (req, res) {
    res.sendFile(path.join(__dirname,'css','fonts.css')); 
-});
+}); 
 
 app.get('/css/font-awesome/css/font-awesome.min.css', function (req, res) {
    res.sendFile(path.join(__dirname,'css/font-awesome/css','font-awesome.min.css')); 
@@ -367,6 +382,10 @@ app.get('/css/font-awesome/css/font-awesome.min.css', function (req, res) {
 
 app.get('/css/img/header-content-bg.png', function (req, res) {
    res.sendFile(path.join(__dirname,'css/img','header-content-bg.png')); 
+});
+
+app.get('/css/img/header-content-bg_@2x.png', function (req, res) {
+   res.sendFile(path.join(__dirname,'css/img','header-content-bg_@2x.png')); 
 });
 
 app.get('/css/fonts/merriweather/merriweather-regular-webfont.woff', function (req, res) {
@@ -412,8 +431,13 @@ app.get('/css/fonts/opensans/OpenSans-Regular-webfont.ttf', function (req, res) 
 app.get('/images/user-01.png', function (req, res) {
    res.sendFile(path.join(__dirname,'images','user-01.png')); 
 });
-
+/*
 var port = 8080; // Use 8080 for local development because you might already have apache running on 80
 app.listen(process.env.PORT || 8080, function () {
   console.log(`IMAD course app listening on port ${port} || 8080}!`);
+}); */
+var port = process.env.PORT;
+
+app.listen(port, function(){
+    console.log(`Blog App listening on port ${port} !`);
 });

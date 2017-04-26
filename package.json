@@ -1,7 +1,7 @@
 {
-  "name": "imad-2016-base",
+  "name": "blog-app-using-nodejs",
   "version": "0.1.0",
-  "description": "IMAD 2016 course app",
+  "description": "Blog App using NodeJs",
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -9,7 +9,13 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.14.0",
-    "morgan": "^1.7.0"
+    "body-parser": "^1.17.1",
+    "crypto": "0.0.3",
+    "express": "^4.15.2",
+    "express-session": "^1.15.2",
+    "fs": "0.0.1-security",
+    "morgan": "^1.8.1",
+    "path": "^0.12.7",
+    "pg": "^6.1.5"
   }
 }
