@@ -16,7 +16,8 @@ var config = {
     host: process.env.DB_HOST,
     database: process.env.DB_NAME,
     port: process.env.DB_PORT,
-    password: process.env.DB_PASSWORD
+    password: process.env.DB_PASSWORD,
+    ssl: true
 };
 
 var app = express();
@@ -27,7 +28,7 @@ app.use(bodyParser.json());
 var pool = new Pool(config);
 var counter = 1;
 
-app.use(session({ secret: 'someRandomSecretValuet', cookie: { maxAge: 1000 * 60 * 60 * 24 * 30 }, resave: true, saveUninitialized: true }));
+app.use(session({ secret: 'someRandomSecretValue', cookie: { maxAge: 1000 * 60 * 60 * 24 * 30 }, resave: true, saveUninitialized: true }));
 
 
 app.get('/auth/check-login', function (req, res) {
@@ -225,6 +226,45 @@ app.post('/login', function (req, res) {
    }
 });
 
+app.post('/login-app', function (req, res) {
+   var username = req.body.username;
+   var password = req.body.password;
+   
+   if ( username && password) { // that is username and password are not empty
+      
+       pool.query('SELECT * FROM "user" WHERE username = $1', [username], function (err, result) {
+          if (err) {
+             // alert(res.send(err.toString()));
+              res.status(500).send(err.toString());
+          } else {
+              if (result.rows.length === 0) {
+                  res.status(403).send('username/password is invalid');
+              } else {
+                  // Match the password
+                  var dbString = result.rows[0].password;
+                  var salt = dbString.split('$')[2];
+                  var hashedPassword = hash(password, salt); // Creating a hash based on the password submitted and the original salt
+                  if (hashedPassword === dbString) {
+                    
+                    // Set the session
+                    req.session.auth = {userId: result.rows[0].id};
+                    // set cookie with a session id
+                    // internally, on the server side, it maps the session id to an object
+                    // { auth: {userId }}
+                    res.send(JSON.stringify({'Credentials': 'Correct!'}));
+                    
+                  } else {
+                    res.status(403).send('username/password is invalid');
+                  }
+              }
+          }
+       });
+       }
+   else {
+        res.status(403).send('Invalid Username/Password Values!');
+   }
+});
+
 app.post('/submit-comment/:articleName', function (req, res) {
    // Check if the user is logged in
     if (req.session && req.session.auth && req.session.auth.userId) {
@@ -305,7 +345,7 @@ app.post('/submit-article', function (req, res) {
       
    });*/
    console.log(req.session.auth.userid);
-   pool.query('INSERT INTO "article" (user_id, title, content, heading) VALUES ($1, $2, $3, $4)', [req.session.auth.userid, title, article, heading], function (err, result) {
+   pool.query('INSERT INTO "article" (user_id, title, content, heading) VALUES ($1, $2, $3, $4)', [req.session.auth.userId, title, article, heading], function (err, result) {
       if (err) {
           res.status(500).send(err.toString());
       } else {
@@ -431,6 +471,9 @@ app.get('/css/fonts/opensans/OpenSans-Regular-webfont.ttf', function (req, res) 
 
 app.get('/images/user-01.png', function (req, res) {
    res.sendFile(path.join(__dirname,'images','user-01.png')); 
+});
+app.get('/images/sprites.gif', function (req, res) {
+   res.sendFile(path.join(__dirname,'images','sprites.gif')); 
 });
 /*
 var port = 8080; // Use 8080 for local development because you might already have apache running on 80
