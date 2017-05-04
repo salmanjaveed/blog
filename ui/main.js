@@ -136,11 +136,13 @@ function loadLoginForm () {
                       <form action="#">
 					<input type ="text" id="username" placeholder="Your Username" class="text-search">
 					<input type="password" id="password" placeholder="Your Password" class="text-search">
-                    <!-- <input type="text" value="Search here..." onblur="if(this.value == '') { this.value = 'Search here...'; }" onfocus="if (this.value == 'Search here...') { this.value = ''; }" class="text-search">
-                     <input type="submit" value="" class="submit-search" disabled>-->
-					 <input type="BUTTON" id="login_btn" class="button" value="Login">
-					 <input type="BUTTON" id="register_btn" class="button" value="Register">
-					 
+                   
+					<!-- <input type="BUTTON" id="login_btn" class="button" value="Login"> -->
+                    <button id="login_btn" class="button" style="background-repeat: none; background-position: right">
+                    Login
+                    </button>
+                    <input type="BUTTON" id="register_btn" class="button" value="Register">
+					   
 
                   </form>
                   `;
@@ -150,7 +152,10 @@ function loadLoginForm () {
     // Submit username/password to login
     var submit = document.getElementById('login_btn');
     submit.onclick = function () {
+        //Ajax Loader
+         submit.style.background = "/images/sprites.gif";
         // Create a request object
+
         var request = new XMLHttpRequest();
         
         // Capture the response and store it in a variable
@@ -173,12 +178,16 @@ function loadLoginForm () {
                   alert('Something went wrong on the server' + request.status.toString());
                   submit.value = 'Login';
               }
+             
               loadLogin();
           }  
           // Not done yet
+          // stopAnimation();
+          submit.style.background = '';
         };
         
         // Make the request
+        
         var username = document.getElementById('username').value;
         var password = document.getElementById('password').value;
         //console.log(username);
@@ -271,7 +280,7 @@ function loadLoggedInUser (username) {
     loginArea.innerHTML = `<h5> Welcome 
     <a href="#" title="Change Profile"> ${username}!</a></h5>
         
-        <a href="#" title="Compose a new Article">Compose an Article</a>
+        <a href="#" title="Compose a new Article" onclick="loadArticleComposeForm()">Compose an Article</a>
         <br />
         <a href="#" title="Edit an Article" >Edit Your Article</a>
         <br />
@@ -347,7 +356,7 @@ function loadArticles () {
 								<span class="meta-sep">&bull;</span>-->
 								<li>${articleData[i].username}</li>
 							</ul>
-						</div>
+						</div> 
 					</header>
 						<div class="entry-content" align="justify">
 						<p class="drop-cap">${articleData[i].content.substring(0,300)}</p>
@@ -390,8 +399,9 @@ function loadStats () {
                 var content = ' ';
                 
                 for (var i=0; i< stats.length; i++) {
+                    
                     content +=`
-                    <li><a href="#">123 <em>Visitors</em></a></li>
+                    <li><a href="#">${stats[i].counter} <em>Visitors</em></a></li>
                         <li><a href="#">${stats[i].articlecount} <em>Articles</em></a></li>
                         <li><a href="#">${stats[i].commentcount} <em>Comments</em></a></li>
                         <li><a href="#">${stats[i].usercount} <em>Registered Users</em></a></li>
@@ -401,7 +411,7 @@ function loadStats () {
                 
                  statsTab.innerHTML = content;
             } else {
-                alert(request.err + request.status);
+                alert('get-stats: ' + request.err + request.status);
                 statsTab.innerHTML = 'Oops! Could not load all articles!';
             }
         }
@@ -432,7 +442,7 @@ function footerComments () {
                 
                  footerComments.innerHTML = content;
             } else {
-                alert(request.err + request.status);
+                alert('footer '+ request.err + request.status);
                 footerComments.innerHTML = 'Oops! Could not load all articles!';
             }
         }
@@ -447,9 +457,9 @@ function footerComments () {
 // The first thing to do is to check if the user is logged in!
 loadLogin();
 
-// Now this is something that we could have directly done on the server-side using templating too!
+/* // Now this is something that we could have directly done on the server-side using templating too!
 loadArticles();
-
+*/
 //Load site stats 
 loadStats();
 
