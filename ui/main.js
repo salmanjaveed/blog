@@ -175,7 +175,7 @@ function loadLoginForm () {
                   alert('Something went wrong on the server' + request.status.toString());
                   submit.value = 'Login';
               } else {
-                  alert('Something went wrong on the server' + request.status.toString());
+                  alert('Something wrong  ' + request.status.toString());
                   submit.value = 'Login';
               }
              
@@ -190,8 +190,7 @@ function loadLoginForm () {
         
         var username = document.getElementById('username').value;
         var password = document.getElementById('password').value;
-        //console.log(username);
-        //console.log(password);
+
         request.open('POST', '/login', true);
         request.setRequestHeader('Content-Type', 'application/json');
         request.send(JSON.stringify({username: username, password: password}));  
@@ -216,16 +215,14 @@ function loadLoginForm () {
                  loadLogin();
                   
               } else {
-                 //alert('Could not register the user');
+                 alert('Could not register the user');
                   register.value = 'Register';
               }
           }
         };
         
         // Make the request
-       
-        //console.log(username);
-        //console.log(password);
+
         request.open('POST', '/create-user', true);
         request.setRequestHeader('Content-Type', 'application/json');
         request.send(JSON.stringify({username: username, password: password}));  
@@ -293,8 +290,7 @@ function loadLogin () {
     request.onreadystatechange = function () {
         if (request.readyState === XMLHttpRequest.DONE) {
             if (request.status === 200) {
-               // alert(this.responseText);
-                loadLoggedInUser(this.responseText);
+                loadLoggedInUser(JSON.parse(this.responseText).username);
             }
             else {
                 loadLoginForm();
