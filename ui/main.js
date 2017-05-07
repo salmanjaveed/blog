@@ -153,7 +153,7 @@ function loadLoginForm () {
     var submit = document.getElementById('login_btn');
     submit.onclick = function () {
         //Ajax Loader
-         submit.style.background = "/images/sprites.gif";
+        // submit.style.background = "/images/sprites.gif";
         // Create a request object
 
         var request = new XMLHttpRequest();
@@ -174,8 +174,10 @@ function loadLoginForm () {
               } else if (request.status === 500) {
                   alert('Something went wrong on the server' + request.status.toString());
                   submit.value = 'Login';
+              } else if (request.status === 0) {
+                  //ignore status =0 and do nothing
               } else {
-                  alert('Something wrong  ' + request.status.toString());
+                  alert('Something wrong  ' + request.statusText);
                   submit.value = 'Login';
               }
              
@@ -183,7 +185,7 @@ function loadLoginForm () {
           }  
           // Not done yet
           // stopAnimation();
-          submit.style.background = '';
+          //submit.style.background = '';
         };
         
         // Make the request
@@ -233,7 +235,6 @@ function loadLoginForm () {
 }
 
 function loginRegisteredUser ( username, password ){
-    
 
         var request = new XMLHttpRequest();
         var submit = document.getElementById('register_btn');    
@@ -255,14 +256,10 @@ function loginRegisteredUser ( username, password ){
               }
               loadLogin();
           }  
-          // Not done yet
         };
         
         // Make the request
-      //  var username = document.getElementById('username').value;
-    //    var password = document.getElementById('password').value;
-        //console.log(username);
-        //console.log(password);
+
         request.open('POST', '/login', true);
         request.setRequestHeader('Content-Type', 'application/json');
         request.send(JSON.stringify({username: username, password: password}));  
@@ -330,8 +327,7 @@ function loadArticles () {
         if (request.readyState === XMLHttpRequest.DONE) {
             var articles = document.getElementById('articles-list');
             var articletitles = document.getElementById('article-titles');
-           // console.log(articletitles);
-            //console.log("articles", articles);
+
             if (request.status === 200) {
                 var content = ' ';
                 var titles = ' ';
@@ -374,7 +370,7 @@ function loadArticles () {
                     articles.innerHTML = content; 
                  }
             } else {
-                alert(request.err.toString() + request.status.toString());
+                alert(request.err + request.status.toString());
                 articles.innerHTML = 'Oops! Could not load all articles!';
             }
         }
