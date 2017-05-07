@@ -392,6 +392,9 @@ app.use("/js", express.static(path.join(__dirname,'/js')));
 app.use("/images", express.static(path.join(__dirname,'/images')));
 app.use("/ui", express.static(path.join(__dirname,'/ui')));
 
+app.get('/favicon.ico', function (req, res) {
+  res.sendFile(path.join(__dirname, '/', 'favicon.ico'));
+});
 
 var port = process.env.PORT;
 
