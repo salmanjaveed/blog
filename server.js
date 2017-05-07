@@ -26,6 +26,8 @@ app.use(morgan('combined'));
 app.use(bodyParser.json());
 
 var pool = new Pool(config);
+var serveStatic = require('serve-static');
+
 var counter = 1;
 
 app.use(session({ secret: 'someRandomSecretValue', cookie: { maxAge: 1000 * 60 * 60 * 24 * 30 }, resave: true, saveUninitialized: true }));
@@ -36,9 +38,9 @@ app.get('/auth/check-login', function (req, res) {
        // Load the user object
        pool.query('SELECT * FROM "user" WHERE id = $1', [req.session.auth.userId], function (err, result) {
            if (err) {
-              res.status(500).send(err.toString());
-           } else {
-              res.send(result.rows[0].username);    
+                  res.status(500).send(JSON.stringify({'error' : err.toString()}));
+              } else {
+                  res.send(JSON.stringify({'username': result.rows[0].username}));   
            }
        });
    } else {
@@ -162,7 +164,7 @@ app.get('/get-num-comments/:articleName', function (req, res) {
     }
   });
 });
-
+/*
 //Create user function 
 app.post('/create-user', function (req, res) {
    // username, password
@@ -186,8 +188,8 @@ app.post('/create-user', function (req, res) {
            res.status(403).send('username/password is invalid');
       }
 });
-
-app.post('/create-user-app', function (req, res) {
+*/
+app.post('/create-user', function (req, res) {
    // username, password
    // {"username": "Salman", "password": "password"}
    // JSON
@@ -209,7 +211,7 @@ app.post('/create-user-app', function (req, res) {
            res.status(403).send(JSON.stringify({'error' : 'username/password is invalid'}));
       }
 });
-
+/*
 app.post('/login', function (req, res) {
    var username = req.body.username;
    var password = req.body.password;
@@ -248,8 +250,8 @@ app.post('/login', function (req, res) {
         res.status(403).send('Invalid Username/Password Values!');
    }
 });
-
-app.post('/login-app', function (req, res) {
+*/
+app.post('/login', function (req, res) {
    var username = req.body.username;
    var password = req.body.password;
    
@@ -349,7 +351,7 @@ app.post('/submit-comment/:articleName', function (req, res) {
 });
 
 
-//Create user function 
+//Create new article function 
 app.post('/submit-article', function (req, res) {
    // username, password
    // {"username": "Salman", "password": "password"}
@@ -366,8 +368,8 @@ app.post('/submit-article', function (req, res) {
         var userid = result.rows[0]; 
        }
       
-   });*/
-   console.log(req.session.auth.userid);
+   });
+   console.log(req.session.auth.userid);*/
    pool.query('INSERT INTO "article" (user_id, title, content, heading) VALUES ($1, $2, $3, $4)', [req.session.auth.userId, title, article, heading], function (err, result) {
       if (err) {
           res.status(500).send(err.toString());
@@ -384,126 +386,18 @@ app.post('/submit-article', function (req, res) {
  * 
  ****/
  
-app.get('/ui/style.css', function (req, res) {
-  res.sendFile(path.join(__dirname, 'ui', 'style.css'));
-});
 
-app.get('/ui/prof-pic.jpg', function (req, res) {
-  res.sendFile(path.join(__dirname, 'ui', 'prof-pic.jpg'));
-});
+app.use("/css", express.static(path.join(__dirname, "/css")));
+app.use("/js", express.static(path.join(__dirname,'/js')));
+app.use("/images", express.static(path.join(__dirname,'/images')));
+app.use("/ui", express.static(path.join(__dirname,'/ui')));
 
-app.get('/ui/main.js', function (req, res) {
-  res.sendFile(path.join(__dirname, 'ui', 'main.js'));
-});
 
-app.get('/ui/article.js', function (req, res) {
-  res.sendFile(path.join(__dirname, 'ui', 'article.js'));
-});
-
-app.get('/favicon.ico', function (req, res) {
-  res.sendFile(path.join(__dirname, '/', 'favicon.ico'));
-});
-
-app.get('/js/jquery-1.10.2.min.js', function (req, res) {
-   res.sendFile(path.join(__dirname,'js','jquery-1.10.2.min.js')); 
-});
-
-app.get('/css/default.css', function (req, res) {
-   res.sendFile(path.join(__dirname,'css','default.css')); 
-});
-
-app.get('/css/media-queries.css', function (req, res) {
-   res.sendFile(path.join(__dirname,'css','media-queries.css')); 
-});
-
-app.get('/js/modernizr.js', function (req, res) {
-   res.sendFile(path.join(__dirname,'js','modernizr.js')); 
-}); 
-
-app.get('/css/layout.css', function (req, res) {
-   res.sendFile(path.join(__dirname,'css','layout.css')); 
-});
-
-app.get('/images/thumb.jpg', function (req, res) {
-   res.sendFile(path.join(__dirname,'images','thumb.jpg')); 
-});
-
-app.get('/js/jquery-migrate-1.2.1.min.js', function (req, res) {
-   res.sendFile(path.join(__dirname,'js','jquery-migrate-1.2.1.min.js')); 
-});
-
-app.get('/js/main.js', function (req, res) {
-   res.sendFile(path.join(__dirname,'js','main.js')); 
-});
-
-app.get('/css/fonts.css', function (req, res) {
-   res.sendFile(path.join(__dirname,'css','fonts.css')); 
-}); 
-
-app.get('/css/font-awesome/css/font-awesome.min.css', function (req, res) {
-   res.sendFile(path.join(__dirname,'css/font-awesome/css','font-awesome.min.css')); 
-});
-
-app.get('/css/img/header-content-bg.png', function (req, res) {
-   res.sendFile(path.join(__dirname,'css/img','header-content-bg.png')); 
-});
-
-app.get('/css/img/header-content-bg_@2x.png', function (req, res) {
-   res.sendFile(path.join(__dirname,'css/img','header-content-bg_@2x.png')); 
-});
-
-app.get('/css/fonts/merriweather/merriweather-regular-webfont.woff', function (req, res) {
-   res.sendFile(path.join(__dirname,'css/fonts/merriweather','/merriweather-regular-webfont.woff')); 
-});
-
-app.get('/css/fonts/opensans/OpenSans-Regular-webfont.woff', function (req, res) {
-   res.sendFile(path.join(__dirname,'css/fonts/opensans','OpenSans-Regular-webfont.woff')); 
-});
-
-app.get('/css/fonts/opensans/OpenSans-Light-webfont.woff', function (req, res) {
-   res.sendFile(path.join(__dirname,'/css/fonts/opensans','OpenSans-Light-webfont.woff')); 
-});
-
-app.get('/css/font-awesome/fonts/fontawesome-webfont.woff', function (req, res) {
-   res.sendFile(path.join(__dirname,'css/font-awesome/fonts','fontawesome-webfont.woff')); 
-});
-
-app.get('/css/font-awesome/fonts/fontawesome-webfont.ttf', function (req, res) {
-   res.sendFile(path.join(__dirname,'css/font-awesome/fonts','fontawesome-webfont.ttf')); 
-});
-
-app.get('/css/fonts/opensans/OpenSans-Bold-webfont.woff', function (req, res) {
-   res.sendFile(path.join(__dirname,'/css/fonts/opensans','OpenSans-Bold-webfont.woff')); 
-});
-
-app.get('/css/fonts/opensans/OpenSans-Semibold-webfont.woff', function (req, res) {
-   res.sendFile(path.join(__dirname,'css/fonts/opensans','OpenSans-Semibold-webfont.woff')); 
-});
-
-app.get('/css/fonts/merriweather/merriweather-regular-webfont.ttf', function (req, res) {
-   res.sendFile(path.join(__dirname,'css/fonts/merriweather','merriweather-regular-webfont.ttf')); 
-});
-
-app.get('/css/fonts/opensans/OpenSans-Light-webfont.ttf', function (req, res) {
-   res.sendFile(path.join(__dirname,'css/fonts/opensans','OpenSans-Light-webfont.ttf')); 
-});
-
-app.get('/css/fonts/opensans/OpenSans-Regular-webfont.ttf', function (req, res) {
-   res.sendFile(path.join(__dirname,'css/fonts/opensans','OpenSans-Regular-webfont.ttf')); 
-});
-
-app.get('/images/user-01.png', function (req, res) {
-   res.sendFile(path.join(__dirname,'images','user-01.png')); 
-});
-app.get('/images/sprites.gif', function (req, res) {
-   res.sendFile(path.join(__dirname,'images','sprites.gif')); 
-});
-/*
-var port = 8080; // Use 8080 for local development because you might already have apache running on 80
-app.listen(process.env.PORT || 8080, function () {
-  console.log(`IMAD course app listening on port ${port} || 8080}!`);
-}); */
 var port = process.env.PORT;
+
+if (!port) {
+    port = 11223;
+}
 
 app.listen(port, function(){
     console.log(`Blog App listening on port ${port} !`);
