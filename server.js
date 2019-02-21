@@ -360,6 +360,16 @@ app.post('/submit-article', function (req, res) {
    var article = req.body.article;
    var title = req.body.title;
    var heading = req.body.heading;
+   var currentdate = new Date();
+   var month = '' + (currentdate.getMonth() + 1);
+   var day = '' + currentdate.getDate();
+   var year = currentdate.getFullYear();
+
+    if (month.length < 2) month = '0' + month;
+    if (day.length < 2) day = '0' + day;
+
+    var shortdate =   [year, month, day].join('-');
+
   // console.log('username:'+username + 'Article:' + article + 'title: ' + title);
   /* pool.query('SELECT "user".id FROM "user" WHERE "user".username=$1',[username], function(err, result) {
        if (err) {
@@ -370,7 +380,7 @@ app.post('/submit-article', function (req, res) {
       
    });
    console.log(req.session.auth.userid);*/
-   pool.query('INSERT INTO "article" (user_id, title, content, heading) VALUES ($1, $2, $3, $4)', [req.session.auth.userId, title, article, heading], function (err, result) {
+   pool.query('INSERT INTO "article" (user_id, title, content, heading, date) VALUES ($1, $2, $3, $4, $5)', [req.session.auth.userId, title, article, heading, shortdate], function (err, result) {
       if (err) {
           res.status(500).send(err.toString());
       } else {
